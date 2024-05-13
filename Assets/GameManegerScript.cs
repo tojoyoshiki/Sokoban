@@ -7,7 +7,7 @@ using UnityEngine;
 public class GameManegerScript : MonoBehaviour
 {
     public GameObject playerPrefab;
-    public GameObject otherPrefab;
+    public GameObject boxPrefab;
     //配列
     int[,] map;
     GameObject[,] field;
@@ -31,21 +31,46 @@ public class GameManegerScript : MonoBehaviour
     {
         //移動先が範囲外なら移動不可
         if (moveTo.y < 0 || moveTo.y >= field.GetLength(0)) { return false; }
-        if (moveTo.x < 0 || moveTo.x >= field.GetLength(2)) { return false; }
+        if (moveTo.x < 0 || moveTo.x >= field.GetLength(1)) { return false; }
 
         //if (map[moveTo] == 2)
         //{
         //    int velocity = moveTo - moveFrom;
-
         //    bool success = MoveNumber(2, moveTo, moveTo + velocity);
         //    //もし箱が移動失敗したら、移動可能かどうかをboolで記録
         //    if (!success) { return false; }
         //}
 
         field[moveTo.y, moveTo.x] = field[moveFrom.y, moveFrom.x];
-        field[moveFrom.y, moveFrom.x] = null;
         field[moveFrom.y, moveFrom.x].transform.position =
             new Vector3(moveTo.x, map.GetLength(0) - moveTo.y, 0);
+        field[moveFrom.y, moveFrom.x] = null;
+        return true;
+    }
+
+    bool IsCleard()
+    {
+        List<Vector2Int>goals = new List<Vector2Int>();
+
+        for(int y=0; y < map.GetLength(0); y++)
+        {
+            for(int x=0;x<map.GetLength(1); x++)
+            {
+                if (map[y, x] == 3)
+                {
+                    goals.Add(new Vector2Int(x,y));
+                }
+            }
+        }
+
+        for(int i=0; i < goals.Count; i++)
+        {
+            GameObject f = field[goals[i].y, goals[i].x];
+            if(f==null || f.tag!="Box")
+            {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -54,7 +79,7 @@ public class GameManegerScript : MonoBehaviour
         //マップの生成
         map = new int[,] {
          { 0, 0, 0, 0, 0 },
-         { 0, 0, 1, 0, 0 },
+         { 0, 2, 1, 0, 0 },
          { 0, 0, 0, 0, 0 },
         };
         //フィールドサイズ決定
@@ -76,11 +101,12 @@ public class GameManegerScript : MonoBehaviour
                         Quaternion.identity
                         );
                 }
-                else
+
+                if (map[y, x] == 2)
                 {
                     field[y, x] = Instantiate(
-                        otherPrefab,
-                        new Vector3(x, map.GetLength(0) - 1 - y, 0.0f),
+                        boxPrefab,
+                        new Vector3(x, map.GetLength(0) - y, 0.0f),
                         Quaternion.identity
                         );
                 }
@@ -104,12 +130,12 @@ public class GameManegerScript : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             Vector2Int playerIndex = GetPlayerIndex();
-            MoveNumber(playerIndex, new Vector2Int(playerIndex.x, playerIndex.y + 1));
+            MoveNumber(playerIndex, new Vector2Int(playerIndex.x, playerIndex.y - 1));
         }
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             Vector2Int playerIndex = GetPlayerIndex();
-            MoveNumber(playerIndex, new Vector2Int(playerIndex.x, playerIndex.y - 1));
+            MoveNumber(playerIndex, new Vector2Int(playerIndex.x, playerIndex.y + 1));
         }
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
@@ -120,6 +146,10 @@ public class GameManegerScript : MonoBehaviour
         {
             Vector2Int playerIndex = GetPlayerIndex();
             MoveNumber(playerIndex, new Vector2Int(playerIndex.x - 1, playerIndex.y));
+        }
+        if (IsCleard())
+        {
+            Debug.Log("Clear");
         }
     }
 }
