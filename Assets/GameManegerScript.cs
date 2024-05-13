@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameManegerScript : MonoBehaviour
@@ -10,25 +11,13 @@ public class GameManegerScript : MonoBehaviour
     //配列
     int[,] map;
     GameObject[,] field;
-
-    //void PrintArray()
-    //{
-    //    string debugText = "";
-    //    for (int i = 0; i < map.Length; i++)
-    //    {
-    //        debugText += map[i].ToString() + ",";
-    //    }
-    //    Debug.Log(debugText);
-    //}
-
     private Vector2Int GetPlayerIndex()
     {
         for (int y = 0; y < field.GetLength(0); y++)
         {
             for (int x = 0; x < field.GetLength(1); x++)
             {
-                //Nullチェック
-
+                if (field[y, x] == null) { continue; }
                 if (field[y, x].tag == "Player")
                 {
                     return new Vector2Int(x, y);
@@ -38,23 +27,27 @@ public class GameManegerScript : MonoBehaviour
         return new Vector2Int(-1, -1);
     }
 
-    //bool MoveNumber(int number, int moveFrom, int moveTo)
-    //{
-    //    //移動先が範囲外なら移動不可
-    //    if (moveTo < 0 || moveTo >= map.Length) { return false; }
-    //    //移動先に２（箱）がいたら
-    //    if (map[moveTo] == 2)
-    //    {
-    //        int velocity = moveTo - moveFrom;
+    bool MoveNumber(Vector2Int moveFrom, Vector2Int moveTo)
+    {
+        //移動先が範囲外なら移動不可
+        if (moveTo.y < 0 || moveTo.y >= field.GetLength(0)) { return false; }
+        if (moveTo.x < 0 || moveTo.x >= field.GetLength(2)) { return false; }
 
-    //        bool success = MoveNumber(2, moveTo, moveTo + velocity);
-    //        //もし箱が移動失敗したら、移動可能かどうかをboolで記録
-    //        if (!success) { return false; }
-    //    }
-    //    map[moveTo] = number;
-    //    map[moveFrom] = 0;
-    //    return true;
-    //}
+        //if (map[moveTo] == 2)
+        //{
+        //    int velocity = moveTo - moveFrom;
+
+        //    bool success = MoveNumber(2, moveTo, moveTo + velocity);
+        //    //もし箱が移動失敗したら、移動可能かどうかをboolで記録
+        //    if (!success) { return false; }
+        //}
+
+        field[moveTo.y, moveTo.x] = field[moveFrom.y, moveFrom.x];
+        field[moveFrom.y, moveFrom.x] = null;
+        field[moveFrom.y, moveFrom.x].transform.position =
+            new Vector3(moveTo.x, map.GetLength(0) - moveTo.y, 0);
+        return true;
+    }
 
     void Start()
     {
@@ -106,21 +99,27 @@ public class GameManegerScript : MonoBehaviour
         }
         Debug.Log(debugText);
     }
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            Vector2Int playerIndex = GetPlayerIndex();
+            MoveNumber(playerIndex, new Vector2Int(playerIndex.x, playerIndex.y + 1));
+        }
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            Vector2Int playerIndex = GetPlayerIndex();
+            MoveNumber(playerIndex, new Vector2Int(playerIndex.x, playerIndex.y - 1));
+        }
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            Vector2Int playerIndex = GetPlayerIndex();
+            MoveNumber(playerIndex, new Vector2Int(playerIndex.x + 1, playerIndex.y));
+        }
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            Vector2Int playerIndex = GetPlayerIndex();
+            MoveNumber(playerIndex, new Vector2Int(playerIndex.x - 1, playerIndex.y));
+        }
+    }
 }
-
-//PrintArray();
-//    }
-//}
-
-//    void Update()
-//    {
-//        // 右矢印キーが押されたときの処理
-//        if (Input.GetKeyDown(KeyCode.RightArrow))
-//        {
-//            // プレイヤーの位置を示すインデックスを初期化
-//            int playerIndex = GetPlayerIndex();
-//            MoveNumber(1,playerIndex, playerIndex + 1);
-//            PrintArray();
-//        }
-//    }
-//}
